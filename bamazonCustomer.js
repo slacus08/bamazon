@@ -25,19 +25,20 @@ var bamazonCustomer = {
     });
   },
 
-  displayProducts: function(){
-    connection.query('SELECT' * FROM products, function(err, res){
-      if (err) throw (err);
-      console.log('Products available: ')
-      for (var i = 0; i < res.length; i++) {
-        console.log(res[i].price)
-      };
-      bamazonCustomer.firstPrompt();
-    });
-  },
+    displayProducts: function() {
+      connection.query('SELECT * from products', function(err, res) {
+        if (err) throw (err);
+        console.log("Products available: ")
+        for (let i = 0; i < res.length; i++) {
+          console.log(res[i].item_id + ' - ' + res[i].product_name +
+            ". Price: $" + res[i].price)
+        };
+        bamazonCustomer.firstPrompt();
+      });
+    },
 
   //use inquirer to prompt customer
-  onePrompt: function() {
+  firstPrompt: function() {
     inquirer.prompt([{
       name: 'itemID',
       message: "Provide Item ID number"
@@ -50,7 +51,7 @@ var bamazonCustomer = {
       var requestedQty = parseInt(answers.quantity);
 
       //Select item chosen from database
-      connection.query('SELECT * FROM products WHERE item_id = ${itemID}', {
+      connection.query('SELECT * FROM products WHERE item_id = ${itemID}',
         function(err, res) {
           //assign variables to new quantity based on updated available stock
           var newQuantity = parseInt(res[0].stock_quantity) - requestedQty;
@@ -60,11 +61,16 @@ var bamazonCustomer = {
             var customerTotal = res[0].price * requestedQty;
             var productSales = res[0].product_sales + CustomerTotal;
             console.log('Confirmed purchase - Total is: $${CustomerTotal}');
-            
-          }
-        }
-      })
 
+            //update database quantities
+            connection.query('UPDATE products set stock_quantity = ${newQuantity}, product_sales = ${productSales} WHERE item_id = ${itemID}', function(err, res){
+              if (err) throw (err);
+              console.log('Item quantity updated!')
+            })
+          } else {
+            console.log('Not enough! Insufficient amount. Only ${res[0].stock_quantity} in stock')
+          }
+        }).then(bamazonCustomer.displayProducts());
     });
   }
 };
