@@ -7,7 +7,7 @@ const connection = mysql.createConnection({
   user: 'root',
   password: '',
   database: 'bamazon',
-  port: 3000
+  port: 3306
 });
 
 //object for customer
